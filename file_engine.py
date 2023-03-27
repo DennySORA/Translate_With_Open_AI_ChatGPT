@@ -28,7 +28,7 @@ class BText(FileEngineBase):
             self.content_to_save = list()
             self.save_index = 0
 
-    def make_bilingual_book(self):
+    def translate(self):
         all_token_count = 0
         index = 0
         token_count = self.prompt_token_count
@@ -119,10 +119,10 @@ class BText(FileEngineBase):
         return translate_content
 
     def check_token_count(self, token_count, i):
-        now_token_count = ContentTools.count_token(
+        now_token_count = self.translate_model.count_token(
             self.origin_content[i])
         if i+1 < self.origin_length:
-            next_token_count = ContentTools.count_token(
+            next_token_count = self.translate_model.count_token(
                 self.origin_content[i+1])
         else:
             next_token_count = 0

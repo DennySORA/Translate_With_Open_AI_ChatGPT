@@ -2,7 +2,7 @@
 import openai
 import tiktoken
 
-from typing import Optional
+from typing import Optional, Any
 
 from abstract import TranslateEngineBase
 
@@ -19,35 +19,32 @@ class ChatGPT(TranslateEngineBase):
         self.key = key
         self.current_key_index = 0
         self.system_command_message = {
-            "role": "system", "content": system_command_message
+            "role": "system",
+            "content": system_command_message
         }
         self.message_record = []
         self.result_message = ""
 
-    @staticmethod
-    def get_translation_system_command_message(before_lang: str, translation_expert: str, lang: str) -> str:
-        return f"you are a \"{before_lang} translation\" expert specialized in translating \"{translation_expert}\" into \"{lang}\"."
-
-    def check_is_max_token(self, messages: list[dict[str, str]]):
+    def _check_is_max_token(self, messages: list[dict[str, str]]):
         num_tokens = 0
         for message in messages:
             num_tokens += self.count_token(message.get("content", ""))
         print("Check tokens:", num_tokens)
         return num_tokens > 4000
 
+    def _is_translate_finish(self, response_message: str) -> bool:
+        if response_message.find("<<NOT_FINISH>>") == -1:
+            return True
+        print("Is Not Finish!!")
+        return False
+
+    def _record_message(self, message: dict[str, str]):
+        self.message_record.append(message)
+
     def count_token(self, content: str) -> int:
         encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
         num_tokens = len(encoding.encode(content))
         return num_tokens
-
-    def record_message(self, message: dict[str, str]):
-        self.message_record.append(message)
-
-    def check_is_finish(self, response_message: str) -> Optional[dict[str, str]]:
-        if response_message.find("<<NOT_FINISH>>") == -1:
-            return None
-        print("Is Not Finish!!")
-        return {"role": "assistant", "content": response_message}
 
     def create_messages(
         self,
@@ -64,9 +61,28 @@ class ChatGPT(TranslateEngineBase):
             ]
         if is_add_system_command_message:
             results = [self.system_command_message, *results]
-        if self.check_is_max_token(results):
+        if self._check_is_max_token(results):
             raise Exception("Max token reached")
         return results
+
+    def _finish_check(self, translate_content: str, continue_count: int):
+        is_finish = self._is_translate_finish(translate_content)
+        if is_finish is False:
+            self._record_message({
+                "role": "assistant",
+                "content": translate_content
+            })
+            translate_content = translate_content.replace("<<NOT_FINISH>>", "")
+            return translate_content + self.translate(
+                self.create_messages(
+                    "Continue",
+                    add_last_recode_index=len(self.message_record),
+                    is_add_system_command_message=False,
+                ),
+                continue_count=continue_count + 1,
+            )
+        self.message_record = []
+        return translate_content
 
     def translate(self, messages: list[dict[str, str]], continue_count: int = 0) -> str:
         '''
@@ -82,29 +98,16 @@ class ChatGPT(TranslateEngineBase):
               "Messages Len:", len(messages))
 
         openai.api_key = self.key
-        completion = openai.ChatCompletion.create(
+        completion: Any = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
         )
         t_text = (
-            completion["choices"][0]
+            completion.get("choices")[0]
             .get("message")
             .get("content")
             .encode("utf8")
             .decode()
         )
 
-        is_finish = self.check_is_finish(t_text)
-        if is_finish is not None:
-            self.record_message(is_finish)
-            t_text = t_text.replace("<<NOT_FINISH>>", "")
-            return t_text + self.translate(
-                self.create_messages(
-                    "Continue",
-                    add_last_recode_index=len(self.message_record),
-                    is_add_system_command_message=False,
-                ),
-                continue_count=continue_count + 1,
-            )
-        self.message_record = []
-        return t_text
+        return self._finish_check(t_text, continue_count)

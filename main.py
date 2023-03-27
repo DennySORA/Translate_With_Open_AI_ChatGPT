@@ -8,9 +8,7 @@ def main():
     before_lang = "Japanese"
     translation_expert = "Japanese light novels"
     lang = "Traditional Chinese"
-    system_command_message = ChatGPT.get_translation_system_command_message(
-        before_lang, translation_expert, lang
-    )
+    system_command_message = f"you are a \"{before_lang} translation\" expert specialized in translating \"{translation_expert}\" into \"{lang}\"."
     prompt = f"""
 I will provide an \"{before_lang}\" article, Request your assistance in translating the following article into \"{lang}\".
 And taking into account the surrounding text and context to ensure accurate and appropriate translation without any logical errors.
@@ -44,7 +42,7 @@ Below is the content: \n
     open_ai_api_key = ""
     translate_engine = ChatGPT(open_ai_api_key, system_command_message)
     book = BText(translate_engine, book_name, prompt, False)
-    book.make_bilingual_book()
+    book.translate()
 
 
 if __name__ == "__main__":

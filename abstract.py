@@ -11,6 +11,10 @@ class TranslateEngineBase(ABC):
         pass
 
     @abstractmethod
+    def count_token(self, content: str) -> int:
+        pass
+
+    @abstractmethod
     def create_messages(self, *args, **kwargs) -> list[dict[str, str]]:
         pass
 
@@ -21,5 +25,5 @@ class FileEngineBase(ABC):
         pass
 
     @abstractmethod
-    def make_bilingual_book(self):
+    def translate(self):
         pass
