@@ -2,7 +2,9 @@
 import openai
 import tiktoken
 
-from typing import Optional, Any
+from aiohttp import ClientSession
+
+from typing import Any
 
 from abstract import TranslateEngineBase
 
@@ -31,23 +33,20 @@ class ChatGPT(TranslateEngineBase):
         print("Check tokens:", num_tokens)
         return num_tokens > 4000
 
-    def _is_translate_finish(self, response_message: str) -> Optional[bool]:
+    def _is_translate_finish(self, response_message: str) -> bool:
         print("Retry Count:", self.retry_count)
         self.retry_count += 1
         if response_message.find("<<NOT_FINISH>>") != -1:
             print("Is Not Finish!!")
             return False
-        elif response_message.find("<<FINISH>>") != -1:
-            print("Is Finish.")
-            self.retry_count = 0
-            return True
-        print("Is Failed!!!!!")
-        return None
+        print("Is Finish.")
+        self.retry_count = 0
+        return True
 
     def _record_message(self, message: dict[str, str]):
         self.message_record.append(message)
 
-    def _handle_false_finish(self, translate_content: str):
+    async def _handle_false_finish(self, translate_content: str):
         self._record_message({
             "role": "assistant",
             "content": translate_content
@@ -58,18 +57,16 @@ class ChatGPT(TranslateEngineBase):
             is_add_system_command_message=False,
         )
         translate_content = translate_content.replace("<<NOT_FINISH>>", "")
-        return translate_content + self.translate(continue_message)
+        return translate_content + await self.translate(continue_message)
 
-    def _finish_check(self, translate_content: str, origin_message: list[dict[str, str]]):
+    async def _finish_check(self, translate_content: str, origin_message: list[dict[str, str]]):
         is_finish = self._is_translate_finish(translate_content)
-        if is_finish is None and self.retry_count < 5:
-            return self.translate(origin_message)
-        elif is_finish is False and self.retry_count < 5:
-            return self._handle_false_finish(translate_content)
+        if is_finish is False and self.retry_count < 5:
+            return await self._handle_false_finish(translate_content)
         else:
             self.message_record = []
             self.retry_count = 0
-            return translate_content.replace("<<FINISH>>", "")
+            return translate_content
 
     def count_token(self, content: str) -> int:
         encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
@@ -95,7 +92,7 @@ class ChatGPT(TranslateEngineBase):
             raise Exception("Max token reached")
         return results
 
-    def translate(self, messages: list[dict[str, str]]) -> str:
+    async def _translate(self, messages: list[dict[str, str]]) -> str:
         '''
         You can call 'create_messages' to retrieve messages.
         '''
@@ -103,10 +100,10 @@ class ChatGPT(TranslateEngineBase):
         print("Messages Len:", len(messages))
 
         openai.api_key = self.key
-        completion: Any = openai.ChatCompletion.create(
+        completion: Any = await openai.ChatCompletion.acreate(
             model="gpt-3.5-turbo",
             messages=messages,
-            temperature=0.8,
+            temperature=0.7,
         )
         t_text = (
             completion.get("choices")[0]
@@ -116,4 +113,11 @@ class ChatGPT(TranslateEngineBase):
             .decode()
         )
 
-        return self._finish_check(t_text, messages)
+        return await self._finish_check(t_text, messages)
+
+    async def translate(self, messages: list[dict[str, str]]) -> str:
+        try:
+            openai.aiosession.set(ClientSession())
+            return await self._translate(messages)
+        finally:
+            await openai.aiosession.get().close()

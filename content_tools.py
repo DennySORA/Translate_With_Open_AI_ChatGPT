@@ -49,6 +49,7 @@ class ContentTools:
         content = content.replace("』", "』\n")
         content = content.replace("）", "）\n")
         content = content.replace("<<START>>", "")
+        content = content.replace("<<FINISH>>", "")
         content = re.sub(r'(?<=。)(?![^「」]*」)', '\n', content)
         content = re.sub("\.+", "……", content)
         content = "\n".join(ContentTools.auto_format_content(content))

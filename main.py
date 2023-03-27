@@ -1,9 +1,13 @@
 
+import sys
+import uvloop
+import asyncio
+
 from file_engine import BText
 from translate_engine import ChatGPT
 
 
-def main():
+async def main():
     book_name = "temp.txt"
     before_lang = "Japanese"
     translation_expert = "Japanese light novels"
@@ -20,9 +24,7 @@ Kindly provide only the translated content and omit the original text.
 Please use notation: 「」『』，。.
 Again, translated into \"{lang}\".
 If the answer is not complete, please add the <<NOT_FINISH>> tag at the end.
-If the answer is complete, please add the <<FINISH>> tag at the end.
-example:
-A:```
+example:A:```
 新生アドラー軍に【源神殿】に発生した仮面の幻影達。双方ともが間違いなく、高レベルハンターでも容易く相手をする事などできない、恐るべき相手だ。
 「やれやれ、今回ばかりはもう終わりかと思ったよ」
 額を腕で拭う。快適だったおかげで汗はかいていなかった。
@@ -40,11 +42,20 @@ Q:```
 ```
 Below is the content: \n
     """
-    open_ai_api_key = "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"
+    open_ai_api_key = "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"
     translate_engine = ChatGPT(open_ai_api_key, system_command_message)
     book = BText(translate_engine, book_name, prompt, False)
-    book.translate()
+
+    await book.translate(3)
 
 
 if __name__ == "__main__":
-    main()
+    if sys.version_info >= (3, 11):
+        with asyncio.Runner(loop_factory=uvloop.new_event_loop) as runner:
+            runner.run(main())
+    else:
+        uvloop.install()
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            print("Interrupted Stop!")
