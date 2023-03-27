@@ -20,6 +20,7 @@ Kindly provide only the translated content and omit the original text.
 Please use notation: 「」.
 Again, translated into \"{lang}\".
 If the answer is not complete, please add the <<NOT_FINISH>> tag at the end.
+If the answer is complete, please add the <<FINISH>> tag at the end.
 example:
 A:```
 新生アドラー軍に【源神殿】に発生した仮面の幻影達。双方ともが間違いなく、高レベルハンターでも容易く相手をする事などできない、恐るべき相手だ。

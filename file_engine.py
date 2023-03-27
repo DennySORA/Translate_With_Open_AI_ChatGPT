@@ -4,6 +4,7 @@ import tqdm
 from abstract import FileEngineBase, TranslateEngineBase
 from content_tools import ContentTools
 
+
 class BText(FileEngineBase):
     def __init__(self, engine: TranslateEngineBase, book_name: str, prompt: str, resume: bool):
         self.book_name = book_name
