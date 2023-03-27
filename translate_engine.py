@@ -31,7 +31,7 @@ class ChatGPT(TranslateEngineBase):
         for message in messages:
             num_tokens += self.count_token(message.get("content", ""))
         print("Check tokens:", num_tokens)
-        return num_tokens > 4000
+        return num_tokens > 4050
 
     def _is_translate_finish(self, response_message: str) -> bool:
         print("Retry Count:", self.retry_count)

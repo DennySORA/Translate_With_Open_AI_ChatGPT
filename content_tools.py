@@ -41,17 +41,29 @@ class ContentTools:
 
     @staticmethod
     def chinese_format(content: str) -> str:
-        content = content.replace("“", "「")
-        content = content.replace("”", "」")
-        content = content.replace("‘", "『")
-        content = content.replace("’", "』")
-        content = content.replace("」", "」\n")
-        content = content.replace("』", "』\n")
-        content = content.replace("）", "）\n")
-        content = content.replace("<<START>>", "")
-        content = content.replace("<<FINISH>>", "")
-        content = re.sub(r'(?<=。)(?![^「」]*」)', '\n', content)
-        content = re.sub("\.+", "……", content)
+        replacements = [
+            ("“", "「"),
+            ("”", "」"),
+            ("‘", "『"),
+            ("’", "』"),
+            ("」", "」\n"),
+            ("』", "』\n"),
+            ("）", "）\n"),
+            ("<<START>>", ""),
+            ("<<FINISH>>", "")
+        ]
+        for i in replacements:
+            content = content.replace(i[0], i[1])
+
+        replacements_re = [
+            (r'(?<=。)(?![^「」]*」)', '\n'),
+            ("\.+", "……"),
+            (r"\n+」","」"),
+            (r"\n+』","』")
+        ]
+        for i in replacements_re:
+            content = re.sub(i[0], i[1], content)
+
         content = "\n".join(ContentTools.auto_format_content(content))
         content = re.sub("\n+", "\n\n", content)
         return content

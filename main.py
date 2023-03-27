@@ -24,7 +24,8 @@ Kindly provide only the translated content and omit the original text.
 Please use notation: 「」『』，。.
 Again, translated into \"{lang}\".
 If the answer is not complete, please add the <<NOT_FINISH>> tag at the end.
-example:A:```
+example:
+Q:```
 新生アドラー軍に【源神殿】に発生した仮面の幻影達。双方ともが間違いなく、高レベルハンターでも容易く相手をする事などできない、恐るべき相手だ。
 「やれやれ、今回ばかりはもう終わりかと思ったよ」
 額を腕で拭う。快適だったおかげで汗はかいていなかった。
@@ -32,7 +33,7 @@ example:A:```
 「目的だった解呪も行えていません。乱入者があったのは予想外でしたし、助かったことは間違いないですが――」
 ラピスが僕に冷ややかな（いつも通りである事は言うまでもない）視線を向けて言う。
 ```
-Q:```
+A:```
 新生阿德拉軍隊，還有『源神殿』顯現的假面幻影。兩邊都無疑是高等級獵人無法輕易戰勝的可怕對手。
 「呀嘞呀嘞，這次我是真的以為要完了」
 我擦了擦額頭。因為很舒適所以沒有出汗。
@@ -42,11 +43,11 @@ Q:```
 ```
 Below is the content: \n
     """
-    open_ai_api_key = "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"
+    open_ai_api_key = "sk-"
     translate_engine = ChatGPT(open_ai_api_key, system_command_message)
     book = BText(translate_engine, book_name, prompt, False)
 
-    await book.translate(3)
+    await book.translate(5)
 
 
 if __name__ == "__main__":

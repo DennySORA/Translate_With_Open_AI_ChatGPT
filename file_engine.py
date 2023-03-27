@@ -19,6 +19,7 @@ class Context(BaseModel):
 
 class BText(FileEngineBase):
     def __init__(self, engine: TranslateEngineBase, book_name: str, prompt: str, resume: bool):
+        self.token_max_limit = 2000
         self.loop = asyncio.get_event_loop()
 
         self.book_name = book_name
@@ -69,8 +70,7 @@ class BText(FileEngineBase):
                 [j for i in self.content.finish_content for j in i[2]])
             content = ContentTools.chinese_format(content)
             self._save_file(content)
-            if os.path.exists(f"{self.book_name}.temp.json"):
-                os.remove(f"{self.book_name}.temp.json")
+            os.remove(f"{self.book_name}.temp.json")
 
     def _count_token(self, index: int):
         now_token_count = self.translate_model.count_token(
@@ -96,7 +96,7 @@ class BText(FileEngineBase):
             now_token_count, next_token_count = self._count_token(i)
             temp_content.append(self.origin_content[i])
 
-            if next_token_count != 0 and token_count + now_token_count + next_token_count < 1500:
+            if next_token_count != 0 and token_count + now_token_count + next_token_count < self.token_max_limit:
                 token_count += now_token_count
                 continue
 
@@ -195,6 +195,7 @@ class BText(FileEngineBase):
                 print(f"{running_id} Pool Finish.")
             finally:
                 del self.content.work_content[prepare_content[0]]
+                self._save_status()
 
     async def translate(self, count: int):
         try:
