@@ -32,7 +32,7 @@ class ChatGPT(TranslateEngineBase):
         return num_tokens > 4000
 
     def _is_translate_finish(self, response_message: str) -> Optional[bool]:
-        print("retry_count:", self.retry_count)
+        print("Retry Count:", self.retry_count)
         self.retry_count += 1
         if response_message.find("<<NOT_FINISH>>") != -1:
             print("Is Not Finish!!")

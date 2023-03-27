@@ -10,7 +10,7 @@ class BText(FileEngineBase):
         self.book_name = book_name
         self.translate_model = engine
         self.prompt = prompt
-        self.prompt_token_count = ContentTools.count_token(self.prompt)
+        self.prompt_token_count = self.translate_model.count_token(self.prompt)
 
         self.book_path = os.path.abspath(self.book_name)
         self.bin_path = f"{self.book_path}.temp.bin"
@@ -59,7 +59,8 @@ class BText(FileEngineBase):
 
                 translate_content = self.get_translate_content(prepare_content)
 
-                translate_content = ContentTools.translate_chinese_convert(translate_content)
+                translate_content = ContentTools.translate_chinese_convert(
+                    translate_content)
 
                 translate_content = ContentTools.auto_format_content(
                     translate_content)
