@@ -59,6 +59,8 @@ class BText(FileEngineBase):
 
                 translate_content = self.get_translate_content(prepare_content)
 
+                translate_content = ContentTools.translate_chinese_convert(translate_content)
+
                 translate_content = ContentTools.auto_format_content(
                     translate_content)
 

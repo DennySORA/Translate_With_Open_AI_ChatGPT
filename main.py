@@ -17,7 +17,7 @@ Do not add any additional text in the translation.
 Be faithful or accurate in translation.
 Make the translation readable or intelligible.
 Kindly provide only the translated content and omit the original text.
-Please use notation: 「」.
+Please use notation: 「」『』，。.
 Again, translated into \"{lang}\".
 If the answer is not complete, please add the <<NOT_FINISH>> tag at the end.
 If the answer is complete, please add the <<FINISH>> tag at the end.
@@ -40,7 +40,7 @@ Q:```
 ```
 Below is the content: \n
     """
-    open_ai_api_key = ""
+    open_ai_api_key = "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"
     translate_engine = ChatGPT(open_ai_api_key, system_command_message)
     book = BText(translate_engine, book_name, prompt, False)
     book.translate()

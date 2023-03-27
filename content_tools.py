@@ -1,11 +1,17 @@
 
 import re
-import tiktoken
+import opencc
 
 from typing import Union
 from langdetect import detect
 
+
 class ContentTools:
+
+    @staticmethod
+    def translate_chinese_convert(content: str) -> str:
+        converter = opencc.OpenCC('s2twp.json')
+        return converter.convert(content)
 
     @staticmethod
     def auto_format_content(content: Union[str, list[str]]) -> list[str]:
@@ -26,12 +32,6 @@ class ContentTools:
         return result
 
     @staticmethod
-    def count_token(content: str) -> int:
-        encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        num_tokens = len(encoding.encode(content))
-        return num_tokens
-
-    @staticmethod
     def check_article_langdetect(content) -> bool:
         lang = detect(content)
         print("detect lang:", lang)
@@ -48,6 +48,7 @@ class ContentTools:
         content = content.replace("」", "」\n")
         content = content.replace("』", "』\n")
         content = content.replace("）", "）\n")
+        content = content.replace("<<START>>", "")
         content = re.sub(r'(?<=。)(?![^「」]*」)', '\n', content)
         content = re.sub("\.+", "……", content)
         content = "\n".join(ContentTools.auto_format_content(content))

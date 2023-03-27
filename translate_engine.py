@@ -22,7 +22,7 @@ class ChatGPT(TranslateEngineBase):
             "content": system_command_message
         }
         self.message_record = []
-        self.continue_count = 0
+        self.retry_count = 0
 
     def _check_is_max_token(self, messages: list[dict[str, str]]):
         num_tokens = 0
@@ -32,11 +32,14 @@ class ChatGPT(TranslateEngineBase):
         return num_tokens > 4000
 
     def _is_translate_finish(self, response_message: str) -> Optional[bool]:
+        print("retry_count:", self.retry_count)
+        self.retry_count += 1
         if response_message.find("<<NOT_FINISH>>") != -1:
             print("Is Not Finish!!")
             return False
         elif response_message.find("<<FINISH>>") != -1:
             print("Is Finish.")
+            self.retry_count = 0
             return True
         print("Is Failed!!!!!")
         return None
@@ -58,15 +61,14 @@ class ChatGPT(TranslateEngineBase):
         return translate_content + self.translate(continue_message)
 
     def _finish_check(self, translate_content: str, origin_message: list[dict[str, str]]):
-        self.continue_count += 1
         is_finish = self._is_translate_finish(translate_content)
-        if is_finish is None:
+        if is_finish is None and self.retry_count < 5:
             return self.translate(origin_message)
-        elif is_finish is False:
+        elif is_finish is False and self.retry_count < 5:
             return self._handle_false_finish(translate_content)
         else:
             self.message_record = []
-            self.continue_count = 0
+            self.retry_count = 0
             return translate_content.replace("<<FINISH>>", "")
 
     def count_token(self, content: str) -> int:
@@ -98,18 +100,13 @@ class ChatGPT(TranslateEngineBase):
         You can call 'create_messages' to retrieve messages.
         '''
 
-        if self.continue_count == 0:
-            self.message_record = messages
-        elif self.continue_count > 5:
-            return "I can't translate this text. Please try again."
-
-        print("Continue count:", self.continue_count,
-              "Messages Len:", len(messages))
+        print("Messages Len:", len(messages))
 
         openai.api_key = self.key
         completion: Any = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
+            temperature=0.8,
         )
         t_text = (
             completion.get("choices")[0]
